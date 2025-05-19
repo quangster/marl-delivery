@@ -880,7 +880,7 @@ if __name__ == "__main__":
     # Training parameters
     parser.add_argument("--max_train_steps", type=int, default=int(1e6) * 5, help=" Maximum number of training steps")
     parser.add_argument("--evaluate_freq", type=float, default=20000, help="Evaluate the policy every 'evaluate_freq' steps")
-    parser.add_argument("--evaluate_times", type=float, default=32, help="Evaluate times")
+    parser.add_argument("--evaluate_times", type=int, default=32, help="Evaluate times")
     parser.add_argument("--save_freq", type=int, default=int(1e5), help="Save frequency")
 
     # Algorithm parameters

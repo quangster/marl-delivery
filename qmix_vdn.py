@@ -525,8 +525,17 @@ class QMIX:
             self.target_Q_net = Q_network_MLP(args, self.input_dim)
         self.target_Q_net.load_state_dict(self.eval_Q_net.state_dict())
 
-        self.eval_mix_net = QMIX_Net(args)
-        self.target_mix_net = QMIX_Net(args)
+        if self.algorithm == "QMIX":
+            print("------algorithm: QMIX------")
+            self.eval_mix_net = QMIX_Net(args)
+            self.target_mix_net = QMIX_Net(args)
+        elif self.algorithm == "VDN":
+            print("------algorithm: VDN------")
+            self.eval_mix_net = VDN_Net()
+            self.target_mix_net = VDN_Net()
+        else:
+            print("wrong!!!")
+
         self.target_mix_net.load_state_dict(self.eval_mix_net.state_dict())
 
         self.eval_parameters = list(self.eval_mix_net.parameters()) + list(self.eval_Q_net.parameters())
@@ -915,7 +924,7 @@ if __name__ == "__main__":
     parser.add_argument("--tau", type=float, default=0.005, help="If use soft update")
 
     # parser.set_defaults(
-    #     use_rnn=False,
+    #     use_rnn=True,
     #     use_orthogonal_init=True,
     #     use_grad_clip=True,
     #     use_lr_decay=False,

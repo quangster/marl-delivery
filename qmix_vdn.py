@@ -901,21 +901,36 @@ if __name__ == "__main__":
     parser.add_argument("--mlp_hidden_dim", type=int, default=128, help="The dimension of the hidden layer of MLP")
 
     # Feature flags
-    parser.add_argument("--use_rnn", type=bool, default=False, help="Whether to use RNN")
-    parser.add_argument("--use_orthogonal_init", type=bool, default=True, help="Orthogonal initialization")
-    parser.add_argument("--use_grad_clip", type=bool, default=True, help="Gradient clip")
-    parser.add_argument("--use_lr_decay", type=bool, default=False, help="use lr decay")
-    parser.add_argument("--use_RMS", type=bool, default=False, help="Whether to use RMS,if False, we will use Adam")
-    parser.add_argument("--add_last_action", type=bool, default=True, help="Whether to add last actions into the observation")
-    parser.add_argument("--add_agent_id", type=bool, default=True, help="Whether to add agent id into the observation")
-    parser.add_argument("--use_double_q", type=bool, default=True, help="Whether to use double q-learning")
-    parser.add_argument("--use_reward_norm", type=bool, default=True, help="Whether to use reward normalization")
-    parser.add_argument("--use_hard_update", type=bool, default=True, help="Whether to use hard update")
+    parser.add_argument("--use_rnn", action="store_true", help="Whether to use RNN")
+    parser.add_argument("--use_orthogonal_init", action="store_true", help="Orthogonal initialization")
+    parser.add_argument("--use_grad_clip", action="store_true", help="Gradient clip")
+    parser.add_argument("--use_lr_decay", action="store_true", help="use lr decay")
+    parser.add_argument("--use_RMS", action="store_true", help="Whether to use RMS,if False, we will use Adam")
+    parser.add_argument("--add_last_action", action="store_true", help="Whether to add last actions into the observation")
+    parser.add_argument("--add_agent_id", action="store_true", help="Whether to add agent id into the observation")
+    parser.add_argument("--use_double_q", action="store_true", help="Whether to use double q-learning")
+    parser.add_argument("--use_reward_norm", action="store_true", help="Whether to use reward normalization")
+    parser.add_argument("--use_hard_update", action="store_true", help="Whether to use hard update")
     parser.add_argument("--target_update_freq", type=int, default=200, help="Update frequency of the target network")
-    parser.add_argument("--tau", type=int, default=0.005, help="If use soft update")
+    parser.add_argument("--tau", type=float, default=0.005, help="If use soft update")
+
+    # parser.set_defaults(
+    #     use_rnn=False,
+    #     use_orthogonal_init=True,
+    #     use_grad_clip=True,
+    #     use_lr_decay=False,
+    #     use_RMS=False,
+    #     add_last_action=True,
+    #     add_agent_id=True,
+    #     use_double_q=True,
+    #     use_reward_norm=True,
+    #     use_hard_update=True
+    # )
 
     args = parser.parse_args()
     args.epsilon_decay = (args.epsilon - args.epsilon_min) / args.epsilon_decay_steps
+
+    print(vars(args))
 
     print(f"Using device: {DEVICE}")
 

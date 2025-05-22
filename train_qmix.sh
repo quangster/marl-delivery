@@ -1,0 +1,32 @@
+#!/bin/bash
+
+python qmix_vdn.py \
+  --map_file map.txt \
+  --n_robots 2 \
+  --n_packages 5 \
+  --max_time_steps 100 \
+  --max_train_steps 5000000 \
+  --evaluate_freq 20000 \
+  --evaluate_times 32 \
+  --save_freq 100000 \
+  --algorithm QMIX \
+  --epsilon 1.0 \
+  --epsilon_decay_steps 50000 \
+  --epsilon_min 0.05 \
+  --buffer_size 5000 \
+  --batch_size 32 \
+  --lr 5e-4 \
+  --gamma 0.99 \
+  --qmix_hidden_dim 32 \
+  --hyper_hidden_dim 64 \
+  --hyper_layers_num 2 \
+  --rnn_hidden_dim 64 \
+  --mlp_hidden_dim 64 \
+  --use_orthogonal_init \
+  --use_grad_clip \
+  --add_last_action \
+  --add_agent_id \
+  --use_double_q \
+  --use_reward_norm \
+  --use_hard_update \
+  --use_rnn

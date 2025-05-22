@@ -139,7 +139,77 @@ def convert_state(state, max_time_steps, max_packages=20, max_packages_in_obs=10
     return observations, global_state
 
 
-def reward_shaping(r, env, state, action):
+def reward_shaping(r, env, state, next_state, action):
+    """
+    Reward shaping function to guide the agent's learning
+    r: original reward (10 for on-time delivery, 1 for late delivery)
+    env: environment instance
+    state: current state before action
+    next_state: state after action
+    action: current action as tuple (movement, package) for each robot
+    """
+    # Get state information
+    current_robots = np.array(state["robots"])
+    next_robots = np.array(next_state["robots"])
+    current_packages = np.array(state["packages"])
+    packages = np.array(next_state["packages"])
+    current_time_step = state["time_step"]
+    next_time_step = next_state["time_step"]
+    n_robots = len(current_robots)
+
+    # Reward for picking up packages and moving closer to destination
+    for i in range(n_robots):
+        current_robot_x, current_robot_y, current_carrying = current_robots[i]
+        next_robot_x, next_robot_y, next_carrying = next_robots[i]
+
+        # Action for robot i
+        movement_action, package_action = action[i]  # Directly unpack the tuple
+
+        # Check for invalid movement actions
+        if movement_action != 0:  # Only check if robot attempted to move
+            # If position hasn't changed after a movement action, it was invalid
+            if current_robot_x == next_robot_x and current_robot_y == next_robot_y:
+                r -= 0.1  # Penalty for invalid movement
+
+        # Check for package pickup
+        if package_action == 1 and current_carrying == 0 and next_carrying > 0:  # Robot just picked up a package
+            # Find the package that was just picked up
+            r += 1.0  # Additional reward for picking up
+            break
+
+        # Check for package delivery
+        if package_action == 2 and current_carrying > 0 and next_carrying == 0:  # Robot just delivered a package
+            # Find the package that was just delivered
+            for pkg in packages:
+                if pkg[0] == current_carrying:  # package was delivered
+                    deadline = pkg[6]
+                    delivery_time = next_time_step
+                    if delivery_time <= deadline:
+                        # On-time delivery: keep full reward
+                        r += 10.0
+                    else:
+                        # Late delivery: reduce reward based on how late
+                        time_diff = delivery_time - deadline
+                        # Reduce reward by 10% for each time step after deadline
+                        # Minimum reward is 1.0
+                        reduction = min(0.9, time_diff * 0.1)  # 10% reduction per step, max 90%
+                        r += max(1.0, 10.0 * (1 - reduction))
+                    break
+
+        # If robot is carrying a package, check if it's moving closer to destination
+        if current_carrying > 0 and next_carrying > 0:  # Robot is carrying a package in next state
+            # Find the package being carried
+            for pkg in packages:
+                if pkg[0] == current_carrying:  # pkg[0] is package ID
+                    target_x, target_y = pkg[3:5]  # target coordinates
+                    # Calculate current and previous Manhattan distances to target
+                    next_dist = abs(next_robot_x - target_x) + abs(next_robot_y - target_y)
+                    current_dist = abs(current_robot_x - target_x) + abs(current_robot_y - target_y)
+                    # If robot moved closer to target, give reward
+                    if next_dist < current_dist:
+                        r += 0.1
+                    break
+
     return r
 
 
@@ -194,9 +264,9 @@ class Env(gym.Env):
 
         # You should not modify the infos object
         s, r, done, infos = self.env.step(action)
-        new_r = reward_shaping(r, self.env, self.prev_state, action)
+        # new_r = reward_shaping(r, self.env, self.prev_state, action)
         self.prev_state = s
-        return convert_state(s, self.env.max_time_steps), new_r, \
+        return convert_state(s, self.env.max_time_steps), r, \
             done, False, infos
     
     def render_image(self):
@@ -253,7 +323,6 @@ class Env(gym.Env):
             cv2.putText(img, f"P{package.package_id}", (x - size // 2, y + size // 2),
                         font, font_scale, (255, 255, 255), 2)
         return img
-
 
 class ReplayBuffer:
     def __init__(self, args):
@@ -849,8 +918,8 @@ class Runner_QMIX:
 
     def evaluate_and_record(self, dir_path="./videos/", prefix_name=""):
         episode_reward = 0
-        frames = []
         self.env.reset()
+        frames = [self.env.render_image()]
         if self.args.use_rnn:  # If use RNN, before the beginning of each episode，reset the rnn_hidden of the Q network.
             self.agent_n.eval_Q_net.rnn_hidden = None
         last_onehot_a_n = np.zeros((self.args.N, self.args.action_dim))  # Last actions of N agents(one-hot)

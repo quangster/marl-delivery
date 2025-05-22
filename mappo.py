@@ -620,8 +620,8 @@ class Runner_MAPPO:
     
     def evaluate_and_record(self, dir_path="./videos/", prefix_name=""):
         episode_reward = 0
-        frames = []
         self.env.reset()
+        frames = [self.env.render_image()]
         if self.args.use_reward_scaling:
             self.reward_scaling.reset()
         if self.args.use_rnn:  # If use RNN, before the beginning of each episode，reset the rnn_hidden
@@ -645,6 +645,8 @@ class Runner_MAPPO:
         print(f"Saved video: {full_video_path}")
         return full_video_path
 
+    def load_weights(self, actor_net_path, critic_net_path):
+        self.agent_n.load_model(actor_net_path, critic_net_path)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Hyperparameters Setting for MAPPO")
